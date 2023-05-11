@@ -4,8 +4,12 @@ module StringAlignment where
     similarityScore string1 string2 = 0
 
     -- b) Explain what the following Haskell function does.
-    -- attachHeads :: a -> a -> [([a], [a])] -> [([a], [a])]
-    -- attachHeads h1 h2 aList = [(h1 : xs, h2 : ys) | (xs, ys) <- aList]
+    -- It attaches the two arguments as heads on each list, i.e. 
+    -- attachHeads 'a' 'b' [(['A'..'F'], ['H'..'K'])] returns [("aABCDEF","bHIJK")], where a and b are inserted first in the two lists.
+    attachHeads :: a -> a -> [([a], [a])] -> [([a], [a])]
+    attachHeads h1 h2 aList = [(h1 : xs, h2 : ys) | (xs, ys) <- aList]
+
+
 
     -- c) Write a Haskell function which generalizes the maximum function in two respects:
 
