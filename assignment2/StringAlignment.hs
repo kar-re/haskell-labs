@@ -11,16 +11,14 @@ module StringAlignment where
   string2 = "vintner"
 
     -- a) Write a Haskell function that returns the score of the optimal alignment of the two strings string1 and string2. If you need to, consult the Hint section below.
-  similarityScore :: (String, String) -> Int -- Remade to work with maximaBy
-  similarityScore ((x:xs),(y:ys))
-    | (y == ' ') = similarityScore ((x:xs),('-':ys))
-    | (x == ' ') = similarityScore (('-':xs),(y:ys))
-    | otherwise = sim ((x:xs),(y:ys))
+  similarityScore :: String -> String -> Int
+  similarityScore [] [] = 0
+  similarityScore [] string2 = (length string2) * scoreSpace
+  similarityScore string1 [] = (length string1) * scoreSpace
+  similarityScore string1 string2 = sim (string1,string2)
 
   sim :: (String, String) -> Int
-  sim ([],_) = 0
-  sim (_,[]) = 0
-  sim ((x:xs),(y:ys)) = maximum [((sim (xs,ys)) + score(x,y)),(sim(xs,(y:ys)) + score(x,'-')),(sim((x:xs),ys) + score('-',y))]
+  sim ((x:xs),(y:ys)) = maximum [((similarityScore xs ys) + score (x,y)),((similarityScore xs (y:ys)) + score(x,'-')),((similarityScore (x:xs) ys) + score('-',y))]
 
   score :: (Char,Char) -> Int
   score (x,'-') = scoreSpace
@@ -63,10 +61,19 @@ module StringAlignment where
   optAlignments [] [] = [([],[])]
   optAlignments (x:xs) [] = attachHeads x '-' (optAlignments xs [])
   optAlignments [] (y:ys) = attachHeads '-' y (optAlignments [] ys)
-  optAlignments (x:xs) (y:ys) = maximaBy similarityScore (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y:ys)), attachHeads '-' y (optAlignments (x:xs) ys)])
+  optAlignments (x:xs) (y:ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y:ys)), attachHeads '-' y (optAlignments (x:xs) ys)])
 
   -- e.) Write a Haskell function
   -- that prints all optimal alignments between string1 and string2 to the screen in a neat and easy-to-read fashion.
   -- outputOptAlignments string1 string2
-  outputOptAlignments :: String -> String -> String
-  outputOptAlignments _ _ = "hello!"
+  outputOptAlignments :: String -> String -> IO()
+  outputOptAlignments string1 string2 = do
+    putStrLn (outputLine string1)
+    putStrLn "\n"
+    putStrLn (outputLine string2)
+
+  outputLine :: String -> String
+  outputLine [] = []
+  outputLine (x:xs)
+   |xs /= [] = ([x] ++ " " ++ (outputLine xs)) --toUpper?
+   |xs == [] = [x]
