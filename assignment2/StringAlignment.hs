@@ -23,6 +23,29 @@ score (x, y)
   | x == y = scoreMatch
   | x /= y = scoreMismatch
 
+newSimilarityScore :: String -> String -> Int
+newSimilarityScore string1 string2 = newSim (length string1) (length string2)
+  where
+    newSim i j = mcsTable !! i !! j
+    mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
+
+    mcsEntry :: Int -> Int -> Int
+    mcsEntry i 0 = (length string1) * scoreSpace
+    mcsEntry 0 j = (length string2) * scoreSpace
+    mcsEntry i j
+      | x == y = 1 + newSim (i - 1) (j - 1)
+      | otherwise =
+          maximum
+            [ (newSim (i - 1) (j - 1)) + score (x, y),
+              (newSim (i - 1) j) + score (x, '-'),
+              (newSim i (j - 1)) + score ('-', y)
+            ]
+      where
+        x = string1 !! (i - 1)
+        y = string2 !! (j - 1)
+
+--
+
 -- b) Explain what the following Haskell function does.
 -- It attaches the two arguments as heads on each list, i.e.
 -- attachHeads 'a' 'b' [(['A'..'F'], ['H'..'K'])] returns [("aABCDEF","bHIJK")], where a and b are inserted first in the two lists.
@@ -73,26 +96,27 @@ outputLine (x : xs)
   | xs /= [] = ([x] ++ " " ++ (outputLine xs)) -- toUpper?
   | xs == [] = [x]
 
-newSimilarityScore :: String -> String -> Int
-newSimilarityScore string1 string2 = newSim (length string1) (length string2)
-  where
-    newSim i j = mcsTable !! i !! j
-    mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
-
-    mcsEntry :: Int -> Int -> Int
-    mcsEntry _ 0 = 0
-    mcsEntry 0 _ = 0
-    mcsEntry i j
-      | x == y = 1 + newSim (i - 1) (j - 1)
-      | otherwise =
-          max
-            (newSim i (j - 1))
-            (newSim (i - 1) j)
-      where
-        x = string1 !! (i - 1)
-        y = string2 !! (j - 1)
-
 -- newOptAlignments :: String -> String -> [AlignmentType]
+-- newOptAlignments string1 string2 = newOpt (length string1) (length string2)
+--   where
+--     newOpt i j = mcsTable !! i !! j
+--     mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
+
+--     mcsEntry :: Int -> Int -> Int
+--     mcsEntry _ 0 = 0
+--     mcsEntry 0 _ = 0
+--     mcsEntry i j
+--       | x == y = 1 + newSim (i - 1) (j - 1)
+--       | otherwise =
+--           maximaBy (uncurry similarityScore)
+--           (concat [attachHeads x y (newOpt i (j - 1)), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
+--           max
+--             (newSim i (j - 1))
+--             (newSim (i - 1) j)
+--       where
+--         x = string1 !! (i - 1)
+--         y = string2 !! (j - 1)
+
 -- optAlignments [] [] = [([], [])]
 -- optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
 -- optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
