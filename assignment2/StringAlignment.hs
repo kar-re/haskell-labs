@@ -1,79 +1,128 @@
 module StringAlignment where
 
-  scoreMatch = 0
+scoreMatch = 0
 
-  scoreMismatch = -1
+scoreMismatch = -1
 
-  scoreSpace = -1
+scoreSpace = -1
 
-  string1 = "writers"
+-- a) Write a Haskell function that returns the score of the optimal alignment of the two strings string1 and string2. If you need to, consult the Hint section below.
+similarityScore :: String -> String -> Int
+similarityScore [] [] = 0
+similarityScore [] string2 = (length string2) * scoreSpace
+similarityScore string1 [] = (length string1) * scoreSpace
+similarityScore string1 string2 = sim (string1, string2)
 
-  string2 = "vintner"
+sim :: (String, String) -> Int
+sim ((x : xs), (y : ys)) = maximum [((similarityScore xs ys) + score (x, y)), ((similarityScore xs (y : ys)) + score (x, '-')), ((similarityScore (x : xs) ys) + score ('-', y))]
 
-    -- a) Write a Haskell function that returns the score of the optimal alignment of the two strings string1 and string2. If you need to, consult the Hint section below.
-  similarityScore :: String -> String -> Int
-  similarityScore [] [] = 0
-  similarityScore [] string2 = (length string2) * scoreSpace
-  similarityScore string1 [] = (length string1) * scoreSpace
-  similarityScore string1 string2 = sim (string1,string2)
+score :: (Char, Char) -> Int
+score (x, '-') = scoreSpace
+score ('-', y) = scoreSpace
+score (x, y)
+  | x == y = scoreMatch
+  | x /= y = scoreMismatch
 
-  sim :: (String, String) -> Int
-  sim ((x:xs),(y:ys)) = maximum [((similarityScore xs ys) + score (x,y)),((similarityScore xs (y:ys)) + score(x,'-')),((similarityScore (x:xs) ys) + score('-',y))]
+-- b) Explain what the following Haskell function does.
+-- It attaches the two arguments as heads on each list, i.e.
+-- attachHeads 'a' 'b' [(['A'..'F'], ['H'..'K'])] returns [("aABCDEF","bHIJK")], where a and b are inserted first in the two lists.
+attachHeads :: a -> a -> [([a], [a])] -> [([a], [a])]
+attachHeads h1 h2 aList = [(h1 : xs, h2 : ys) | (xs, ys) <- aList]
 
-  score :: (Char,Char) -> Int
-  score (x,'-') = scoreSpace
-  score ('-',y) = scoreSpace
-  score (x,y) 
-    |x == y = scoreMatch
-    |x /= y = scoreMismatch
+-- c) Write a Haskell function which generalizes the maximum function in two respects:
 
-  -- b) Explain what the following Haskell function does.
-  -- It attaches the two arguments as heads on each list, i.e. 
-  -- attachHeads 'a' 'b' [(['A'..'F'], ['H'..'K'])] returns [("aABCDEF","bHIJK")], where a and b are inserted first in the two lists.
-  attachHeads :: a -> a -> [([a], [a])] -> [([a], [a])]
-  attachHeads h1 h2 aList = [(h1 : xs, h2 : ys) | (xs, ys) <- aList]
+-- The "value" of an element is defined by a function supplied as a parameter.
+-- Instead of just one element, the result is a list of all maximum elements.
+-- For example, maximaBy length ["cs", "efd", "lth", "it"] should return ["efd", "lth"].
+maximaBy :: Ord b => (a -> b) -> [a] -> [a]
+maximaBy valueFcn [] = []
+maximaBy valueFcn list = maximaByHelp valueFcn list big
+  where
+    big = maximum (map valueFcn list)
 
+-- help function to store the biggest value troughout the iteration.
+maximaByHelp _ [] _ = []
+maximaByHelp valueFcn (x : xs) big
+  | (valueFcn x) == big = [x] ++ maximaByHelp valueFcn xs big
+  | otherwise = maximaByHelp valueFcn xs big
 
+-- d.) Let
+type AlignmentType = (String, String)
 
-  -- c) Write a Haskell function which generalizes the maximum function in two respects:
+-- Write a Haskell function which returns a list of all optimal alignments between string1 and string2.
+-- (Hint: Follow the same pattern as you did in part a., and make use of the functions defined in parts b. and c.)
 
-  -- The "value" of an element is defined by a function supplied as a parameter.
-  -- Instead of just one element, the result is a list of all maximum elements.
-  -- For example, maximaBy length ["cs", "efd", "lth", "it"] should return ["efd", "lth"].
-  maximaBy :: Ord b => (a -> b) -> [a] -> [a]
-  maximaBy valueFcn [] = []
-  maximaBy valueFcn list = maximaByHelp valueFcn list big
-    where big = maximum (map valueFcn list)
+optAlignments :: String -> String -> [AlignmentType]
+optAlignments [] [] = [([], [])]
+optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
+optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
+optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
-  -- help function to store the biggest value troughout the iteration.
-  maximaByHelp _ [] _ = []
-  maximaByHelp valueFcn (x:xs) big
-    | (valueFcn x) == big = [x] ++ maximaByHelp valueFcn xs big
-    | otherwise =  maximaByHelp valueFcn xs big
+-- e.) Write a Haskell function
+-- that prints all optimal alignments between string1 and string2 to the screen in a neat and easy-to-read fashion.
+-- outputOptAlignments string1 string2
+outputOptAlignments :: String -> String -> IO ()
+outputOptAlignments string1 string2 = do
+  putStrLn (outputLine string1)
+  putStrLn "\n"
+  putStrLn (outputLine string2)
 
-  -- d.) Let
-  type AlignmentType = (String, String)
+outputLine :: String -> String
+outputLine [] = []
+outputLine (x : xs)
+  | xs /= [] = ([x] ++ " " ++ (outputLine xs)) -- toUpper?
+  | xs == [] = [x]
 
-  -- Write a Haskell function which returns a list of all optimal alignments between string1 and string2.
-  -- (Hint: Follow the same pattern as you did in part a., and make use of the functions defined in parts b. and c.)
+newSimilarityScore :: String -> String -> Int
+newSimilarityScore string1 string2 = newSim (length string1) (length string2)
+  where
+    newSim i j = mcsTable !! i !! j
+    mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
 
-  optAlignments :: String -> String -> [AlignmentType]
-  optAlignments [] [] = [([],[])]
-  optAlignments (x:xs) [] = attachHeads x '-' (optAlignments xs [])
-  optAlignments [] (y:ys) = attachHeads '-' y (optAlignments [] ys)
-  optAlignments (x:xs) (y:ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y:ys)), attachHeads '-' y (optAlignments (x:xs) ys)])
+    mcsEntry :: Int -> Int -> Int
+    mcsEntry _ 0 = 0
+    mcsEntry 0 _ = 0
+    mcsEntry i j
+      | x == y = 1 + newSim (i - 1) (j - 1)
+      | otherwise =
+          max
+            (newSim i (j - 1))
+            (newSim (i - 1) j)
+      where
+        x = string1 !! (i - 1)
+        y = string2 !! (j - 1)
 
-  -- e.) Write a Haskell function
-  -- that prints all optimal alignments between string1 and string2 to the screen in a neat and easy-to-read fashion.
-  -- outputOptAlignments string1 string2
-  outputOptAlignments :: String -> String -> IO()
-  outputOptAlignments string1 string2 = do
-    putStrLn (outputLine string1)
-    putStrLn "\n"
-    putStrLn (outputLine string2)
+-- newOptAlignments :: String -> String -> [AlignmentType]
+-- optAlignments [] [] = [([], [])]
+-- optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
+-- optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
+-- optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
-  outputLine :: String -> String
-  outputLine [] = []
-  outputLine (x:xs)
-   |xs /= [] = ([x] ++ " " ++ (outputLine xs)) --toUpper?
-   |xs == [] = [x]
+mcsLength' :: Eq a => [a] -> [a] -> Int
+mcsLength' _ [] = 0
+mcsLength' [] _ = 0
+mcsLength' (x : xs) (y : ys)
+  | x == y = 1 + mcsLength' xs ys
+  | otherwise =
+      max
+        (mcsLength' xs (y : ys))
+        (mcsLength' (x : xs) ys)
+
+mcsLength :: Eq a => [a] -> [a] -> Int
+mcsLength xs ys = mcsLen (length xs) (length ys)
+  where
+    mcsLen i j = mcsTable !! i !! j
+    mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
+
+    mcsEntry :: Int -> Int -> Int
+    mcsEntry _ 0 = 0
+    mcsEntry 0 _ = 0
+    mcsEntry i j
+      | x == y = 1 + mcsLen (i - 1) (j - 1)
+      | otherwise =
+          max
+            (mcsLen i (j - 1))
+            (mcsLen (i - 1) j)
+      where
+        x = xs !! (i - 1)
+        y = ys !! (j - 1)
