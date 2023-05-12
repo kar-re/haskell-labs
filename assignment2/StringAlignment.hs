@@ -6,6 +6,16 @@ scoreMismatch = -1
 
 scoreSpace = -1
 
+string1 = "writers"
+string2 = "vintner"
+
+x = "aferociousmonadatemyhamster" 
+
+y = "functionalprogrammingrules"
+
+z = "bananrepubliksinvasionsarmestabsadjutant"
+t = "kontrabasfiolfodralmakarmästarlärling"
+
 -- a) Write a Haskell function that returns the score of the optimal alignment of the two strings string1 and string2. If you need to, consult the Hint section below.
 similarityScore :: String -> String -> Int
 similarityScore [] [] = 0
@@ -80,13 +90,15 @@ type AlignmentType = (String, String)
 
 optAlignments :: String -> String -> [AlignmentType]
 optAlignments [] [] = [([], [])]
-optAlignments _ [] = [([], [])]
-optAlignments [] _ = [([], [])]
+--optAlignments _ [] = [([], [])]
+--optAlignments [] _ = [([], [])]
+optAlignments string1 [] = [(string1, concat $ replicate (length string1) "-")]
+optAlignments [] string2 = [(concat $ replicate (length string2) "-", string2)]
 -- optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
 -- optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
 optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
-newOptAlignments :: String -> String -> [AlignmentType]
+newOptAlignments :: String -> String -> (Int, [AlignmentType])
 newOptAlignments string1 string2 = newOpt (length string1) (length string2)
   where
     newOpt :: Int -> Int -> (Int, [AlignmentType])
@@ -95,23 +107,16 @@ newOptAlignments string1 string2 = newOpt (length string1) (length string2)
 
     mcsEntry :: Int -> Int -> (Int, [AlignmentType])
     mcsEntry 0 0 = (0, [([], [])])
-    mcsEntry i 0 = (newOpt (i - 1) [],)
-    mcsEntry 0 j = (length string2) * scoreSpace
-    mcsEntry i j =
-      maximaBy
-        (uncurry similarityScore)
-        concat
-        [ attachHeads
-            as
-            string2
-            attachHeads
-            string1
-            '-'
-            (newOpt (i - 1) j),
-          attachHeads '-' string2 (newOpt i (j - 1))
-        ]
+    mcsEntry i 0 = (i * scoreSpace , [(string1, concat $ replicate (length string1) "-")])
+    mcsEntry 0 j = (j * scoreSpace , [(concat $ replicate (length string2) "-", string2)])
+    mcsEntry i j = (maximum $ map fst alignments, concatMap snd $ maximaBy fst alignments)
+      --(1, bestAlignment)
       where
-        (a, as) = (newOpt (i - 1) (j - 1))
+        --bestAlignment = maximaBy (uncurry newSimilarityScore) (concat $ map snd alignments)
+        alignments = [(a + score (x,y) ,attachHeads x y as),(b + score (x,'-'), attachHeads x '-' bs), (c + score ('-',y), attachHeads '-' y cs)]
+        (a, as) = newOpt (i - 1) (j - 1)
+        (b, bs) = newOpt i (j - 1)
+        (c, cs) = newOpt (i - 1) j
         x = string1 !! (i - 1)
         y = string2 !! (j - 1)
 
