@@ -80,6 +80,29 @@ optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
 optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
 optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
+newOptAlignments :: String -> String -> [AlignmentType]
+newOptAlignments string1 string2 = newOpt (length string1) (length string2)
+  where
+    newOpt i j = mcsTable !! i !! j
+    mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
+
+    mcsEntry :: [AlignmentType] -> [AlignmentType] -> Int
+    mcsEntry [] [] = [([], [])]
+    optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
+    optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
+    mcsEntry (x : xs) (y : ys)
+      | x == y = 1 + newSim (i - 1) (j - 1)
+      | otherwise =
+          maximaBy
+            (uncurry similarityScore)
+            (concat [attachHeads x y (newOpt i (j - 1)), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
+            max
+            (newSim i (j - 1))
+            (newSim (i - 1) j)
+      where
+        x = string1 !! (i - 1)
+        y = string2 !! (j - 1)
+
 -- e.) Write a Haskell function
 -- that prints all optimal alignments between string1 and string2 to the screen in a neat and easy-to-read fashion.
 -- outputOptAlignments string1 string2
@@ -94,32 +117,6 @@ outputLine [] = []
 outputLine (x : xs)
   | xs /= [] = ([x] ++ " " ++ (outputLine xs)) -- toUpper?
   | xs == [] = [x]
-
--- newOptAlignments :: String -> String -> [AlignmentType]
--- newOptAlignments string1 string2 = newOpt (length string1) (length string2)
---   where
---     newOpt i j = mcsTable !! i !! j
---     mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
-
---     mcsEntry :: Int -> Int -> Int
---     mcsEntry _ 0 = 0
---     mcsEntry 0 _ = 0
---     mcsEntry i j
---       | x == y = 1 + newSim (i - 1) (j - 1)
---       | otherwise =
---           maximaBy (uncurry similarityScore)
---           (concat [attachHeads x y (newOpt i (j - 1)), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
---           max
---             (newSim i (j - 1))
---             (newSim (i - 1) j)
---       where
---         x = string1 !! (i - 1)
---         y = string2 !! (j - 1)
-
--- optAlignments [] [] = [([], [])]
--- optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
--- optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
--- optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
 mcsLength' :: Eq a => [a] -> [a] -> Int
 mcsLength' _ [] = 0
