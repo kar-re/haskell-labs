@@ -51,6 +51,10 @@ newSimilarityScore string1 string2 = newSim (length string1) (length string2)
 attachHeads :: a -> a -> [([a], [a])] -> [([a], [a])]
 attachHeads h1 h2 aList = [(h1 : xs, h2 : ys) | (xs, ys) <- aList]
 
+-- Same as above, just appends as tails to the lists instead of head
+attachTails :: a -> a -> [([a], [a])] -> [([a], [a])]
+attachTails h1 h2 aList = [(xs ++ [h1], ys ++ [h2]) | (xs, ys) <- aList]
+
 -- c) Write a Haskell function which generalizes the maximum function in two respects:
 
 -- The "value" of an element is defined by a function supplied as a parameter.
@@ -76,30 +80,38 @@ type AlignmentType = (String, String)
 
 optAlignments :: String -> String -> [AlignmentType]
 optAlignments [] [] = [([], [])]
-optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
-optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
+optAlignments _ [] = [([], [])]
+optAlignments [] _ = [([], [])]
+-- optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
+-- optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
 optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
 newOptAlignments :: String -> String -> [AlignmentType]
 newOptAlignments string1 string2 = newOpt (length string1) (length string2)
   where
+    newOpt :: Int -> Int -> (Int, [AlignmentType])
     newOpt i j = mcsTable !! i !! j
     mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
 
-    mcsEntry :: [AlignmentType] -> [AlignmentType] -> Int
-    mcsEntry [] [] = [([], [])]
-    optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
-    optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
-    mcsEntry (x : xs) (y : ys)
-      | x == y = 1 + newSim (i - 1) (j - 1)
-      | otherwise =
-          maximaBy
-            (uncurry similarityScore)
-            (concat [attachHeads x y (newOpt i (j - 1)), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
-            max
-            (newSim i (j - 1))
-            (newSim (i - 1) j)
+    mcsEntry :: Int -> Int -> (Int, [AlignmentType])
+    mcsEntry 0 0 = (0, [([], [])])
+    mcsEntry i 0 = (newOpt (i - 1) [],)
+    mcsEntry 0 j = (length string2) * scoreSpace
+    mcsEntry i j =
+      maximaBy
+        (uncurry similarityScore)
+        concat
+        [ attachHeads
+            as
+            string2
+            attachHeads
+            string1
+            '-'
+            (newOpt (i - 1) j),
+          attachHeads '-' string2 (newOpt i (j - 1))
+        ]
       where
+        (a, as) = (newOpt (i - 1) (j - 1))
         x = string1 !! (i - 1)
         y = string2 !! (j - 1)
 
