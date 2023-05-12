@@ -1,14 +1,23 @@
 module StringAlignment where
     -- a) Write a Haskell function that returns the score of the optimal alignment of the two strings string1 and string2. If you need to, consult the Hint section below.
     similarityScore :: String -> String -> Int
-    similarityScore string1 string2 = 0
+    similarityScore (x:xs) (y:ys)
+      | (y == ' ') and (x != ' ') = similarityScore (x:xs) ('-':ys)
+      | (x == ' ') and (y != ' ') = similarityScore ('-':xs) (y:ys)
+      | otherwise = sim ((x:xs),(y:ys))
+
+    -- sim :: ([a], [b]) -> Int
+    sim((x:xs),(y:ys)) = max {sim (xs,ys) + score(x,y), sim(xs,(y:ys)) + score(x,'-'), sim((x:xs),ys) + score('-',y)}
+
+    score(x,'-') = score('-',y) = scoreSpace
+    score(x,y) = scoreMatch, if x == y
+                 scoreMismatch, if x /= y
 
     -- b) Explain what the following Haskell function does.
     -- It attaches the two arguments as heads on each list, i.e. 
     -- attachHeads 'a' 'b' [(['A'..'F'], ['H'..'K'])] returns [("aABCDEF","bHIJK")], where a and b are inserted first in the two lists.
     attachHeads :: a -> a -> [([a], [a])] -> [([a], [a])]
     attachHeads h1 h2 aList = [(h1 : xs, h2 : ys) | (xs, ys) <- aList]
-
 
 
     -- c) Write a Haskell function which generalizes the maximum function in two respects:
