@@ -1,5 +1,7 @@
 module StringAlignment where
 
+import Data.Char
+
 scoreMatch = 0
 
 scoreMismatch = -1
@@ -90,16 +92,12 @@ type AlignmentType = (String, String)
 
 optAlignments :: String -> String -> [AlignmentType]
 optAlignments [] [] = [([], [])]
---optAlignments _ [] = [([], [])]
---optAlignments [] _ = [([], [])]
-optAlignments string1 [] = [(string1, concat $ replicate (length string1) "-")]
-optAlignments [] string2 = [(concat $ replicate (length string2) "-", string2)]
--- optAlignments (x : xs) [] = attachHeads x '-' (optAlignments xs [])
--- optAlignments [] (y : ys) = attachHeads '-' y (optAlignments [] ys)
+optAlignments string1 [] = [(take (length string1) string2, replicate (length string1) '-')]
+optAlignments [] string2 = [(replicate (length string2) '-', take (length string2) string2)]
 optAlignments (x : xs) (y : ys) = maximaBy (uncurry similarityScore) (concat [attachHeads x y (optAlignments xs ys), attachHeads x '-' (optAlignments xs (y : ys)), attachHeads '-' y (optAlignments (x : xs) ys)])
 
-newOptAlignments :: String -> String -> (Int, [AlignmentType])
-newOptAlignments string1 string2 = newOpt (length string1) (length string2)
+newOptAlignments :: String -> String -> [AlignmentType]
+newOptAlignments string1 string2 = snd (newOpt (length string1) (length string2))
   where
     newOpt :: Int -> Int -> (Int, [AlignmentType])
     newOpt i j = mcsTable !! i !! j
@@ -107,16 +105,14 @@ newOptAlignments string1 string2 = newOpt (length string1) (length string2)
 
     mcsEntry :: Int -> Int -> (Int, [AlignmentType])
     mcsEntry 0 0 = (0, [([], [])])
-    mcsEntry i 0 = (i * scoreSpace , [(string1, concat $ replicate (length string1) "-")])
-    mcsEntry 0 j = (j * scoreSpace , [(concat $ replicate (length string2) "-", string2)])
-    mcsEntry i j = (maximum $ map fst alignments, concatMap snd $ maximaBy fst alignments)
-      --(1, bestAlignment)
+    mcsEntry i 0 = (scoreSpace * i, [(take i string2, replicate i '-')])
+    mcsEntry 0 j = (scoreSpace * j, [(replicate j '-', take j string2)])
+    mcsEntry i j = (head $ map fst alignments , concat $ map snd alignments)
       where
-        --bestAlignment = maximaBy (uncurry newSimilarityScore) (concat $ map snd alignments)
-        alignments = [(a + score (x,y) ,attachHeads x y as),(b + score (x,'-'), attachHeads x '-' bs), (c + score ('-',y), attachHeads '-' y cs)]
+        alignments = maximaBy fst [(a + score (x,y) , attachTails x y as),(b + score (x,'-'), attachTails x '-' bs), (c + score ('-',y), attachTails '-' y cs)]
         (a, as) = newOpt (i - 1) (j - 1)
-        (b, bs) = newOpt i (j - 1)
-        (c, cs) = newOpt (i - 1) j
+        (b, bs) = newOpt (i - 1) j
+        (c, cs) = newOpt i (j - 1)
         x = string1 !! (i - 1)
         y = string2 !! (j - 1)
 
@@ -125,9 +121,18 @@ newOptAlignments string1 string2 = newOpt (length string1) (length string2)
 -- outputOptAlignments string1 string2
 outputOptAlignments :: String -> String -> IO ()
 outputOptAlignments string1 string2 = do
-  putStrLn (outputLine string1)
+  putStrLn ("There are " ++ n ++ " optimal alignments:")
   putStrLn "\n"
-  putStrLn (outputLine string2)
+  putStrLn (outputGroup x)
+  putStrLn "\n"
+  putStrLn ("There were " ++ n ++ " optimal alignments!")
+  where
+    n = show (length x)
+    x = newOptAlignments string1 string2
+
+outputGroup :: [AlignmentType] -> String
+outputGroup [] = []
+outputGroup (x:xs) = "\n" ++ (outputLine $ fst x) ++ "\n" ++ (outputLine $ snd x) ++ "\n" ++ outputGroup xs
 
 outputLine :: String -> String
 outputLine [] = []
