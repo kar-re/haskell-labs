@@ -30,16 +30,15 @@ newSimilarityScore string1 string2 = newSim (length string1) (length string2)
     mcsTable = [[mcsEntry i j | j <- [0 ..]] | i <- [0 ..]]
 
     mcsEntry :: Int -> Int -> Int
+    mcsEntry 0 0 = 0
     mcsEntry i 0 = (length string1) * scoreSpace
     mcsEntry 0 j = (length string2) * scoreSpace
-    mcsEntry i j
-      | x == y = 1 + newSim (i - 1) (j - 1)
-      | otherwise =
-          maximum
-            [ (newSim (i - 1) (j - 1)) + score (x, y),
-              (newSim (i - 1) j) + score (x, '-'),
-              (newSim i (j - 1)) + score ('-', y)
-            ]
+    mcsEntry i j =
+      maximum
+        [ (newSim (i - 1) (j - 1)) + score (x, y),
+          (newSim (i - 1) j) + score (x, '-'),
+          (newSim i (j - 1)) + score ('-', y)
+        ]
       where
         x = string1 !! (i - 1)
         y = string2 !! (j - 1)
