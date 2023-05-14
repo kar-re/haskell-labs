@@ -29,7 +29,8 @@ token :: Parser a -> Parser a
 token m = m #- spaces
 
 letter :: Parser Char
-letter =  error "letter not implemented"
+letter = char ? isAlpha
+-- letter =  error "letter not implemented"
 
 word :: Parser String
 word = token (letter # iter letter >-> cons)
