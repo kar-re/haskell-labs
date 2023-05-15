@@ -70,8 +70,28 @@ shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 
+
+-- Implement the function value in module Expr. 
+-- The expression value e dictionary should return the value of e if all the variables occur in dictionary and there is no division by zero. 
+--Otherwise an error should be reported using error.
+
+-- Saxxade ganska mycket från shw
 value :: Expr -> Dictionary.T String Integer -> Integer
-value (Num n) _ = error "value not implemented"
+value (Num n) _ = n
+value (Add t u) d = value t d + value u d
+value (Sub t u) d = value t d - value u d
+value (Mul t u) d = value t d * value u d
+value (Div t u) d = case value u d of   -- if d == 0
+        0 -> error "div by 0 not allowed"
+        _ -> value t d `div` value u d
+value (Var v) d = case Dictionary.lookup v d of
+        Nothing -> error "Not found in dict"
+        Just v -> v
+
+-- value (Num n) _ = error "value not implemented"
+
+-- >>> value e dictionary
+
 
 instance Parse Expr where
     parse = expr

@@ -22,6 +22,7 @@ cons(a, b) = a:b
 m -# n = m # n >-> snd
 -- m -# n = error "-# not implemented"
 
+-- Note: THIS is probably wrong / kaspian, it returns nothing :/ 
 -- >>> (accept "read" -# word) "read count;" 
 -- Nothing
 
@@ -29,12 +30,11 @@ m -# n = m # n >-> snd
 (#-) :: Parser a -> Parser b -> Parser a
 m #- n = m # n >-> fst
 
-
-
 space :: Parser Char
 space = char ? isSpace
 
 -- spaces accepts any number of whitespace characters as defined by the Prelude function isSpace.
+-- Note: THIS is probably wrong / kaspian
 spaces :: Parser String
 spaces = space # iter space >-> cons
 
@@ -50,8 +50,8 @@ word :: Parser String
 word = token (letter # iter letter >-> cons)
 
 -- The parser chars n accepts n characters.
+-- Note: THIS is probably wrong / kaspian
 chars :: Int -> Parser String
--- chars n =  error "chars not implemented"
 chars n = char # iter char >-> cons
 -- chars n =  error "chars not implemented"
 
@@ -61,7 +61,7 @@ accept w = (token (chars (length w))) ? (==w)
 -- The parser require w accepts the same string input as accept w but reports the missing string using err in case of failure.
 require :: String -> Parser String
 require w = accept w ! error "error " 
--- require w  = error "require not implemented"
+-- require w  = error "require not i mplemented"
 
 lit :: Char -> Parser Char
 lit c = token char ? (==c)
