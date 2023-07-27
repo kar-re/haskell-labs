@@ -1,6 +1,6 @@
 module Parser(module CoreParser, T, digit, digitVal, chars, letter, err,
               lit, number, iter, accept, require, token,
-              spaces, word, (-#), (#-)) where
+              spaces, word, (-#), (#-), newLine) where
 import Prelude hiding (return, fail)
 import Data.Char
 import CoreParser
@@ -25,6 +25,7 @@ m -# n = m # n >-> snd
 -- Note: THIS is probably wrong / kaspian, it returns nothing :/ 
 -- >>> (accept "read" -# word) "read count;" 
 -- Nothing
+-- Works now with different spaces and chars implementation
 
 
 (#-) :: Parser a -> Parser b -> Parser a
@@ -34,9 +35,9 @@ space :: Parser Char
 space = char ? isSpace
 
 -- spaces accepts any number of whitespace characters as defined by the Prelude function isSpace.
--- Note: THIS is probably wrong / kaspian
+-- Note: THIS is probably wrong / kaspian. I thinks it's fixed //Alex
 spaces :: Parser String
-spaces = space # iter space >-> cons
+spaces = iter space
 
 token :: Parser a -> Parser a
 token m = m #- spaces
@@ -50,17 +51,18 @@ word :: Parser String
 word = token (letter # iter letter >-> cons)
 
 -- The parser chars n accepts n characters.
--- Note: THIS is probably wrong / kaspian
+-- Note: THIS is probably wrong / kaspian. I thinks it's fixed //Alex
 chars :: Int -> Parser String
-chars n = char # iter char >-> cons
+chars 0 = return []
+chars n = char # chars (n-1) >-> cons
 -- chars n =  error "chars not implemented"
 
 accept :: String -> Parser String
-accept w = (token (chars (length w))) ? (==w)
+accept w = token (chars (length w)) ? (==w)
 
 -- The parser require w accepts the same string input as accept w but reports the missing string using err in case of failure.
 require :: String -> Parser String
-require w = accept w ! error "error " 
+require w = accept w ! err ("error " ++ w)
 -- require w  = error "require not i mplemented"
 
 lit :: Char -> Parser Char
@@ -77,4 +79,24 @@ number' n = digitVal #> (\ d -> number' (10*n+d))
           ! return n
 number :: Parser Integer
 number = token (digitVal #> number')
+
+isNotNewLine :: Char -> Bool
+isNotNewLine c
+    | c == '\n' = False
+    | otherwise = True
+
+{- newLine :: Parser Char
+newLine = char ? isNotNewLine
+
+comment :: Parser String
+comment = iter newLine
+
+comments :: String -> String
+comments [] = []
+comments (x:xs)
+    | x == '\n' = x:xs
+    | otherwise = comments xs -}
+
+newLine :: Parser String
+newLine = iter $ char ? isNotNewLine
 
