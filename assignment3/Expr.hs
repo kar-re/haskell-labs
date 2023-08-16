@@ -74,8 +74,6 @@ shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
 -- Implement the function value in module Expr. 
 -- The expression value e dictionary should return the value of e if all the variables occur in dictionary and there is no division by zero. 
 --Otherwise an error should be reported using error.
-
--- Saxxade ganska mycket från shw
 value :: Expr -> Dictionary.T String Integer -> Integer
 value (Num n) _ = n
 value (Add t u) d = value t d + value u d
