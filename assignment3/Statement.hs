@@ -49,7 +49,7 @@ exec (Comment string: stmts) dict input = exec stmts dict input
 stringify :: Statement -> String
 stringify (Assignment string expr) = string ++ ":=" ++ Expr.toString expr ++ ";'\n'"
 stringify (If cond thenStmts elseStmts) = "if " ++ Expr.toString cond ++ "\nthen " ++ (stringify thenStmts) ++ "\nelse " ++ (stringify elseStmts) ++ "\n" 
-stringify (Begin s) = "begin\n" ++ concatMap stringify sp ++ "end\n"
+stringify (Begin s) = "begin\n" ++ concatMap stringify s ++ "end\n"
 stringify (While expr s) = "while " ++ Expr.toString expr ++ " do\n" ++ stringify s
 stringify (Read string)  = "read " ++ string ++ ";\n"
 stringify (Write expr) = "wrote " ++ Expr.toString expr ++ ";\n"
