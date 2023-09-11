@@ -14,7 +14,7 @@ class Parse a where
         case parse cs of
                Just(s, []) -> s
                Just(s, cs) -> error ("garbage '"++cs++"'")
-               Nothing -> error "Nothing"
+               Nothing -> error "Asdf"
     toString :: a -> String
 
 type Parser a = String -> Maybe (a, String)

@@ -27,19 +27,27 @@ import Prelude hiding (return, fail)
 import Parser hiding (T)
 import qualified Dictionary
 
-data Expr = Num Integer | Var String | Add Expr Expr 
-       | Sub Expr Expr | Mul Expr Expr | Div Expr Expr
+data Expr = Num Integer 
+          | Var String 
+          | Add Expr Expr 
+          | Sub Expr Expr 
+          | Mul Expr Expr 
+          | Div Expr Expr 
+          | Pow Expr Expr
          deriving Show
 
 type T = Expr
 
-var, num, factor, term, expr :: Parser Expr
+var, num, factor, term, expr, pow :: Parser Expr
 
-term', expr' :: Expr -> Parser Expr
+term', expr', factor' :: Expr -> Parser Expr
 
 var = word >-> Var
 
 num = number >-> Num
+
+
+powOp = lit '^' >-> (\_ -> Pow)
 
 mulOp = lit '*' >-> (\_ -> Mul) !
         lit '/' >-> (\_ -> Div)
@@ -49,10 +57,13 @@ addOp = lit '+' >-> (\_ -> Add) !
 
 bldOp e (oper,e') = oper e e'
 
-factor = num !
+pow = num !
          var !
          lit '(' -# expr #- lit ')' !
          err "illegal factor"
+
+factor' e = powOp # pow >-> bldOp e #> factor' ! return e
+factor = factor #> factor'
              
 term' e = mulOp # factor >-> bldOp e #> term' ! return e
 term = factor #> term'
@@ -69,6 +80,7 @@ shw prec (Add t u) = parens (prec>5) (shw 5 t ++ "+" ++ shw 5 u)
 shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
+shw prec (Pow t u) = parens (prec>7) (shw 7 t ++ "^" ++ shw 7 u)
 
 
 -- Implement the function value in module Expr. 
@@ -79,6 +91,7 @@ value (Num n) _ = n
 value (Add t u) d = value t d + value u d
 value (Sub t u) d = value t d - value u d
 value (Mul t u) d = value t d * value u d
+value (Pow t u) d = value t d ^ value u d
 value (Div t u) d = case value u d of   -- if d == 0
         0 -> error "div by 0 not allowed"
         _ -> value t d `div` value u d

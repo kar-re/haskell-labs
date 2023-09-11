@@ -61,3 +61,6 @@ exprSpec = do
 
     it "should be able to calculate 2^3^4+2^5*6+7^8+9" $ do
       testValue "2^3^4+2^5*6+7^8+9" `shouldBe` 2417851639229258355177354
+
+main :: IO ()
+main = hspec exprSpec
