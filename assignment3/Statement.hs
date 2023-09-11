@@ -49,8 +49,8 @@ exec (Comment string: stmts) dict input = exec stmts dict input
 indent n = replicate (2 * n) ' '
 
 stringify :: Int -> Statement -> String
-stringify n (Assignment string expr) = indent n ++ string ++ " := " ++ Expr.toString expr ++ ";'\n'"
-stringify n (If cond thenStmts elseStmts) = indent n ++ "if " ++ Expr.toString cond ++ " then\n" ++ stringify (n+1) thenStmts ++ "else\n" ++ stringify (n+1) elseStmts
+stringify n (Assignment string expr) = indent n ++ string ++ " := " ++ Expr.toString expr ++ ";\n"
+stringify n (If cond thenStmts elseStmts) = indent n ++ "if " ++ Expr.toString cond ++ " then\n" ++ stringify (n+1) thenStmts ++ indent n ++ "else\n" ++ stringify (n+1) elseStmts
 stringify n (Begin s) = indent n ++ "begin\n" ++ concatMap (stringify (n+1)) s ++ indent n ++ "end"
 stringify n (While expr s) = indent n ++ "while " ++ Expr.toString expr ++ " do\n" ++ stringify (n+1) s ++ "\n"
 stringify n (Read string)  = indent n ++ "read " ++ string ++ ";\n"
