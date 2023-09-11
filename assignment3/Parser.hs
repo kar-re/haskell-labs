@@ -34,7 +34,7 @@ spaces :: Parser String
 spaces = iter space
 
 token :: Parser a -> Parser a
-token m = m #- spaces
+token m = m #- removeCommentOrSpace
 
 noEmpty :: Parser String 
 noEmpty = (char ? isSpace) # iter (char ? isSpace) >-> cons
