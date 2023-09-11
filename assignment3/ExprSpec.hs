@@ -45,7 +45,6 @@ exprSpec = do
     it "shouldn't allow undefined variables" $ do
       evaluate (testValue "2+z") `shouldThrow` anyException -- error "undefined variable z"
 
-
     it "2^3 should be 8" $ do
       testValue "y^3" `shouldBe` 8
 
@@ -61,6 +60,3 @@ exprSpec = do
 
     it "should be able to calculate 2^3^4+2^5*6+7^8+9" $ do
       testValue "2^3^4+2^5*6+7^8+9" `shouldBe` 2417851639229258355177354
-
-main :: IO ()
-main = hspec exprSpec

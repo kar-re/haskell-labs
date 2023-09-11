@@ -109,17 +109,5 @@ isNotNewLine c
   | c == '\n' = False
   | otherwise = True
 
-{- newLine :: Parser Char
-newLine = char ? isNotNewLine
-
-comment :: Parser String
-comment = iter newLine
-
-comments :: String -> String
-comments [] = []
-comments (x:xs)
-    | x == '\n' = x:xs
-    | otherwise = comments xs -}
-
 newLine :: Parser String
 newLine = iter $ char ? isNotNewLine
