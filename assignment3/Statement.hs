@@ -18,16 +18,16 @@ data Statement =
 assignment = word #- accept ":=" # Expr.parse #- require ";" >-> buildAss
 _if = accept "if" -# Expr.parse # require "then" -# parse # require "else" -# parse >-> buildIf
 begin = accept "begin" -# iter parse #- require "end" >-> Begin
-while = accept "while" -# Expr.parse # require "do" -# parse >-> buildWhile
+while = accept "while" -# Expr.parse #- require "do" # parse >-> buildWhile
 _read = accept "read" -# word #- require ";" >-> Read
 write = accept "write" -# Expr.parse #- require ";" >-> Write
-skip = accept "skip" # require ";" >-> buildSkip
+skip = accept "skip" #- require ";" >-> buildSkip
 comment = accept "--" -# dropComment #- require "\n" >-> Comment
 
 buildAss (v, e) = Assignment v e
 buildIf ((e,x), y) = If e x y
 buildWhile (e, x) = While e x
-buildSkip (v, x) = Skip
+buildSkip _ = Skip
 
 exec :: [T] -> Dictionary.T String Integer -> [Integer] -> [Integer]
 exec [] _ _ = []
