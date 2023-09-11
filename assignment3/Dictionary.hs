@@ -8,7 +8,7 @@ empty :: (Eq a, Ord a) => T a b
 empty = Dictionary []
 
 lookup :: (Eq a, Ord a) => a -> T a b -> Maybe b
-lookup a (Dictionary dict) = Prelude.lookup a dict
+lookup a (Dictionary d) = Prelude.lookup a d
 
 insert :: (Eq a, Ord a) => (a, b) -> T a b -> T a b
-insert pair (Dictionary dict)  = Dictionary (pair:dict)
+insert p (Dictionary d)  = Dictionary (p:d)

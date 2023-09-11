@@ -1,6 +1,6 @@
 module Parser(module CoreParser, T, digit, digitVal, chars, letter, err,
               lit, number, iter, accept, require, token,
-              spaces, word, (-#), (#-), newLine) where
+              spaces, word, (-#), (#-), newLine, dropComment) where
 import Prelude hiding (return, fail)
 import Data.Char
 import CoreParser
@@ -20,12 +20,7 @@ cons(a, b) = a:b
 -- The function should be declared as a left associative infix operator with precedence 7. Example:
 (-#) :: Parser a -> Parser b -> Parser b
 m -# n = m # n >-> snd
--- m -# n = error "-# not implemented"
 
--- Note: THIS is probably wrong / kaspian, it returns nothing :/ 
--- >>> (accept "read" -# word) "read count;" 
--- Nothing
--- Works now with different spaces and chars implementation
 
 
 (#-) :: Parser a -> Parser b -> Parser a
@@ -35,12 +30,23 @@ space :: Parser Char
 space = char ? isSpace
 
 -- spaces accepts any number of whitespace characters as defined by the Prelude function isSpace.
--- Note: THIS is probably wrong / kaspian. I thinks it's fixed //Alex
 spaces :: Parser String
 spaces = iter space
 
 token :: Parser a -> Parser a
 token m = m #- spaces
+
+noEmpty :: Parser String 
+noEmpty = (char ? isSpace) # iter (char ? isSpace) >-> cons
+
+comment :: Parser String
+comment = (chars 2 ? (== "--")) -# iter (char ? (/='\n')) #- require "\n"
+
+removeCommentOrSpace :: Parser String
+removeCommentOrSpace = iter (comment ! noEmpty) >-> concat
+
+dropComment :: Parser String 
+dropComment s = return (dropWhile (/= '\n') s) ""
 
 -- letter is a parser for a letter as defined by the Prelude function isAlpha.
 letter :: Parser Char
@@ -51,11 +57,9 @@ word :: Parser String
 word = token (letter # iter letter >-> cons)
 
 -- The parser chars n accepts n characters.
--- Note: THIS is probably wrong / kaspian. I thinks it's fixed //Alex
 chars :: Int -> Parser String
 chars 0 = return []
 chars n = char # chars (n-1) >-> cons
--- chars n =  error "chars not implemented"
 
 accept :: String -> Parser String
 accept w = token (chars (length w)) ? (==w)

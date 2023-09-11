@@ -38,9 +38,9 @@ data Expr = Num Integer
 
 type T = Expr
 
-var, num, factor, term, expr, pow :: Parser Expr
+var, num, factor, term, expr :: Parser Expr
 
-term', expr', factor' :: Expr -> Parser Expr
+term', expr' :: Expr -> Parser Expr
 
 var = word >-> Var
 
@@ -57,16 +57,16 @@ addOp = lit '+' >-> (\_ -> Add) !
 
 bldOp e (oper,e') = oper e e'
 
-pow = num !
+factor = num !
          var !
          lit '(' -# expr #- lit ')' !
          err "illegal factor"
 
-factor' e = powOp # pow >-> bldOp e #> factor' ! return e
-factor = pow #> factor'
+pow' e = powOp # pow >-> bldOp e ! return e
+pow = factor #> pow'
              
-term' e = mulOp # factor >-> bldOp e #> term' ! return e
-term = factor #> term'
+term' e = mulOp # pow >-> bldOp e #> term' ! return e
+term = pow #> term'
        
 expr' e = addOp # term >-> bldOp e #> expr' ! return e
 expr = term #> expr'
@@ -80,7 +80,7 @@ shw prec (Add t u) = parens (prec>5) (shw 5 t ++ "+" ++ shw 5 u)
 shw prec (Sub t u) = parens (prec>5) (shw 5 t ++ "-" ++ shw 6 u)
 shw prec (Mul t u) = parens (prec>6) (shw 6 t ++ "*" ++ shw 6 u)
 shw prec (Div t u) = parens (prec>6) (shw 6 t ++ "/" ++ shw 7 u)
-shw prec (Pow t u) = parens (prec>7) (shw 7 t ++ "^" ++ shw 8 u)
+shw prec (Pow t u) = parens (prec>6) (shw 7 t ++ "^" ++ shw 8 u)
 
 
 -- Implement the function value in module Expr. 
@@ -91,7 +91,7 @@ value (Num n) _ = n
 value (Add t u) d = value t d + value u d
 value (Sub t u) d = value t d - value u d
 value (Mul t u) d = value t d * value u d
-value (Pow t u) d = value t d ^ value u d
+value (Pow t u) d = (value t d) ^ (value u d)
 value (Div t u) d = case value u d of   -- if d == 0
         0 -> error "div by 0 not allowed"
         _ -> value t d `div` value u d
